@@ -102,6 +102,19 @@ Sistema embebido para medir temperatura mediante un sensor PT100 (señal condici
 
 ---
 
+## Pantalla (`display.c`)
+
+El LCD muestra temperatura, voltaje y textos de modo sin usar la librería estándar de C (`stdio.h`, `printf`, `snprintf`). En PIC16F877A (368 bytes de RAM) esa librería reserva variables internas (`_width`, etc.) y puede provocar error de linker.
+
+| Formato | Implementación |
+|---------|----------------|
+| Temperatura `XX.X` | `float_to_str_1dec()` |
+| Voltaje `X.XXX` | `float_to_str_3dec()` |
+| Umbrales `Von` / `Voff` | `u8_to_str2()` + concatenación manual |
+| Cadenas fijas | Literales directos a `LCD_Write_String()` |
+
+---
+
 ## Flujo de arranque
 
 1. Puertos (A/B/C entradas; D salidas ventilador/alarma).
@@ -123,10 +136,16 @@ Sistema embebido para medir temperatura mediante un sensor PT100 (señal condici
 Driver paralelo en PORTB (RB0–RB5) **no se enlaza** (conflicto con botones RB0–RB2). El archivo queda en disco como referencia.
 
 Exclusión configurada en:
-- `nbproject/configurations.xml` — fuera de `SourceFiles`; `excluded="true"`
-- `nbproject/Makefile-default.mk`
-- `cmake/Digitales2_Proy_final/default/user.cmake`
-- `.vscode/Digitales2_Proy_final.mplab.json` — lista explícita sin `lcd.c`
+
+| Ubicación | Detalle |
+|-----------|---------|
+| `nbproject/configurations.xml` | `lcd.c` en `SourceFiles` con `<item path="lcd.c" excluded="true"/>`; resto de `.c` con `excluded="false"` |
+| `cmake/.../user.cmake` | Elimina `lcd.c` de la lista de compilación CMake |
+| `.vscode/Digitales2_Proy_final.mplab.json` | `fileSets` sin `lcd.c` |
+
+`nbproject/Makefile-default.mk` lo regenera MPLAB X al compilar (no está versionado). Tras cambiar `configurations.xml`, hacer **Clean and Build** en MPLAB X. En el log no debe aparecer `lcd.p1`.
+
+Si MPLAB X vuelve a incluir `lcd.c`: clic derecho en Project Explorer → **Exclude file(s) from build**.
 
 ### Salida
 `out/Digitales2_Proy_final/default.elf` (y `.hex`)
@@ -145,6 +164,9 @@ Exclusión configurada en:
 
 **Simulador:** usar **4 MHz**, no 1 MHz.
 
+### `_XTAL_FREQ`
+Definido en `config.h` como `4000000UL`. En `I2C_LCD.h` queda protegido con `#ifndef _XTAL_FREQ` para evitar redefinición al incluir varios headers.
+
 ---
 
 ## Correcciones aplicadas
@@ -154,8 +176,12 @@ Exclusión configurada en:
 | Flancos de botones no detectados | Variables `rb*_was` en `botones.c` |
 | ADC con bits basura en ADRESH | Máscara `(ADRESH & 0x03)` en `adc.c` |
 | Mensaje «VALOR INVALIDO» no expiraba | `advertencia_count` → `uint16_t` |
-| `lcd.c` compilado sin uso | Exclusión en nbproject, CMake y mplab.json |
+| `lcd.c` compilado sin uso | Exclusión en `configurations.xml`, CMake y `mplab.json` |
 | Conflicto `void main` en IDE | `#undef main`, suppress clangd, `c_cpp_properties.json` |
+| Linker: RAM insuficiente (`_width`, printf) | Sin `stdio.h`; formateo manual en `display.c` |
+| Warning 1518 prototipo incompleto | `LCD_Clear(void)`, `I2C_Master_Init(void)` en `I2C_LCD.h`; `I2C_LCD.h` primero en `botones.c` |
+| Warning `_XTAL_FREQ` redefinido | Guard `#ifndef` en `I2C_LCD.h` |
+| Warning `GIE = gi_state` (uint8_t → bit) | `GIE = (gi_state != 0)` en `eeprom.c` |
 
 ---
 
@@ -171,8 +197,11 @@ Exclusión configurada en:
 ├── I2C_LCD.c / I2C_LCD.h
 ├── lcd.c / lcd.h          # Legado, no en build
 ├── nbproject/
+│   ├── configurations.xml # Exclusión lcd.c (versionado)
+│   └── project.xml
 ├── cmake/
 ├── .vscode/
+├── docs/README.md
 └── README.md
 ```
 
@@ -190,4 +219,5 @@ Proyecto **Digitales 2** (UNI): control y seguimiento de temperatura con PT100 e
 2. MANUAL: UP/DOWN; salida con MODE corta.
 3. CONFIG: MODE larga, Von/Voff, mensaje inválido ~2 s, EEPROM.
 4. Alarma ≥ 58 °C.
-5. Compilación sin `lcd.p1`.
+5. Compilación sin `lcd.p1` ni errores de RAM por printf.
+6. LCD: temperatura y voltaje con formato correcto en modo AUTO.

@@ -1,6 +1,8 @@
 /* File: I2C_LCD.h */
  
-#define _XTAL_FREQ            4000000
+#ifndef _XTAL_FREQ
+#define _XTAL_FREQ            4000000UL
+#endif
  
 #define I2C_BaudRate          100000
 #define SCL_D                 TRISC3
@@ -30,7 +32,7 @@
  
 //---[ I2C Routines ]---
  
-void I2C_Master_Init();
+void I2C_Master_Init(void);
 void I2C_Master_Wait();
 void I2C_Master_Start();
 void I2C_Master_RepeatedStart();
@@ -53,4 +55,4 @@ void Backlight();
 void noBacklight();
 void LCD_SR();
 void LCD_SL();
-void LCD_Clear();
+void LCD_Clear(void);

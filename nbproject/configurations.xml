@@ -23,16 +23,12 @@
       <itemPath>display.c</itemPath>
       <itemPath>eeprom.c</itemPath>
       <itemPath>I2C_LCD.c</itemPath>
+      <itemPath>lcd.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
                    projectFiles="false">
       <itemPath>Makefile</itemPath>
-    </logicalFolder>
-    <logicalFolder name="OtherFiles"
-                   displayName="Other Files"
-                   projectFiles="false">
-      <itemPath>lcd.c</itemPath>
     </logicalFolder>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
@@ -128,6 +124,13 @@
         <property key="managed-stack" value="false"/>
         <property key="remove-unused-sections" value="true"/>
       </HI-TECH-LINK>
+      <item path="main.c" excluded="false"/>
+      <item path="adc.c" excluded="false"/>
+      <item path="botones.c" excluded="false"/>
+      <item path="control.c" excluded="false"/>
+      <item path="display.c" excluded="false"/>
+      <item path="eeprom.c" excluded="false"/>
+      <item path="I2C_LCD.c" excluded="false"/>
       <item path="lcd.c" excluded="true"/>
     </conf>
   </confs>

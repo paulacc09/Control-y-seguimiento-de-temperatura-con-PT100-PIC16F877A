@@ -20,7 +20,7 @@ void escribir_EEPROM(uint8_t address, uint8_t data) {
     EECON1bits.WR = 1;
     while (EECON1bits.WR);
     EECON1bits.WREN = 0;
-    GIE = gi_state;
+    GIE = (gi_state != 0);
 }
 
 void cargar_umbrales_EEPROM(void) {
