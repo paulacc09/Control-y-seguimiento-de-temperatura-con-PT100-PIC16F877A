@@ -12,6 +12,9 @@
 #include "display.h"
 #include "I2C_LCD.h"
 
+// XC8: suprimir redeclaración de main para PIC8
+#undef main
+
 // ── Definición de variables globales (declaradas extern en config.h) ──────────
 volatile uint8_t  flag_timer   = 0;
 volatile uint16_t ticks_timer  = 0;
@@ -29,7 +32,7 @@ uint8_t     alarma_parpadeo= 0;
 float       voltaje_actual     = 0.0f;
 float       temperatura_actual = 0.0f;
 uint8_t     advertencia_activa = 0;
-uint8_t     advertencia_count  = 0;
+uint16_t    advertencia_count  = 0;
 
 // ── ISR ───────────────────────────────────────────────────────────────────────
 void __interrupt() isr(void) {

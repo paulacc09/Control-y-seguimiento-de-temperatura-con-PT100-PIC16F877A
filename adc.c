@@ -4,7 +4,7 @@
 uint16_t leer_ADC(void) {
     ADCON0bits.GO_DONE = 1;
     while (ADCON0bits.GO_DONE);
-    return ((uint16_t)(ADRESH << 8) | ADRESL);
+    return (uint16_t)(((ADRESH & 0x03) << 8) | ADRESL);
 }
 
 float convertir_temperatura(uint16_t lectura, float *voltaje_out) {

@@ -18,13 +18,20 @@ void leer_botones(void) {
     uint8_t rb1 = (BTN_UP == 0);
     uint8_t rb2 = (BTN_DOWN == 0);
 
+    uint8_t rb0_was = rb0_prev;
+    uint8_t rb1_was = rb1_prev;
+    uint8_t rb2_was = rb2_prev;
+
     // Debounce control
     if (rb0 != rb0_prev) rb0_debounce = 0;
     if (rb1 != rb1_prev) rb1_debounce = 0;
     if (rb2 != rb2_prev) rb2_debounce = 0;
-    if (rb0_debounce < 5) rb0_debounce++; rb0_prev = rb0;
-    if (rb1_debounce < 5) rb1_debounce++; rb1_prev = rb1;
-    if (rb2_debounce < 5) rb2_debounce++; rb2_prev = rb2;
+    if (rb0_debounce < 5) rb0_debounce++;
+    if (rb1_debounce < 5) rb1_debounce++;
+    if (rb2_debounce < 5) rb2_debounce++;
+    rb0_prev = rb0;
+    rb1_prev = rb1;
+    rb2_prev = rb2;
 
     // MODE button (RB0)
     if (rb0 && rb0_debounce == 5) {
@@ -43,7 +50,7 @@ void leer_botones(void) {
                 }
             }
         }
-    if (!rb0 && rb0_prev && rb0_debounce == 5) {
+    if (!rb0 && rb0_was && rb0_debounce == 5) {
         // Short press (if not a long press)
         if (!rb0_hold_fired) {
             if (modo_actual == MODO_CONFIG) {
@@ -70,7 +77,7 @@ void leer_botones(void) {
     }
 
     // UP button (RB1)
-    if (rb1 && !rb1_prev && rb1_debounce == 5) {
+    if (rb1 && !rb1_was && rb1_debounce == 5) {
         if (modo_actual == MODO_MANUAL) {
             fan_on = 1;
             FAN_PIN = 1;
@@ -98,7 +105,7 @@ void leer_botones(void) {
     }
 
     // DOWN button (RB2)
-    if (rb2 && !rb2_prev && rb2_debounce == 5) {
+    if (rb2 && !rb2_was && rb2_debounce == 5) {
         if (modo_actual == MODO_MANUAL) {
             fan_on = 0;
             FAN_PIN = 0;

@@ -388,7 +388,13 @@
     {
       "name": "Project files",
       "files": [
-        "*"
+        "main.c",
+        "adc.c",
+        "botones.c",
+        "control.c",
+        "display.c",
+        "eeprom.c",
+        "I2C_LCD.c"
       ],
       "encoding": "ISO-8859-1"
     }

@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "XC8",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "__XC8",
+                "_XTAL_FREQ=4000000UL",
+                "__PIC16F877A__"
+            ],
+            "compilerPath": "C:/Program Files/Microchip/xc8/v3.10/bin/xc8-cc.exe",
+            "cStandard": "c99",
+            "intelliSenseMode": "gcc-x86"
+        }
+    ],
+    "version": 4
+}

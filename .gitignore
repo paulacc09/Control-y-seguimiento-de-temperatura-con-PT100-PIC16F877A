@@ -1,7 +1,11 @@
 .generated_files/
 build/
 dist/
-nbproject/
+nbproject/private/
+nbproject/Makefile-genesis.properties
+nbproject/Makefile-impl.mk
+nbproject/Makefile-local-default.mk
+nbproject/Makefile-variables.mk
 Makefile*
 Package-*
 private/

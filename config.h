@@ -80,6 +80,6 @@ extern float temperatura_actual;
 
 // Advertencia CONFIG
 extern uint8_t advertencia_activa;
-extern uint8_t advertencia_count;
+extern uint16_t advertencia_count;
 
 #endif
