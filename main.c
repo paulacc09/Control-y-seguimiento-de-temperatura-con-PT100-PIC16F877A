@@ -38,7 +38,7 @@ uint16_t    advertencia_count  = 0;
 void __interrupt() isr(void) {
     if (TMR0IF) {
         TMR0IF = 0;
-        TMR0   = 246;
+        TMR0   = 250;
         ticks_timer++;
         if (ticks_timer >= 50) {
             ticks_timer = 0;
@@ -52,7 +52,7 @@ void configurar_timer0(void) {
     OPTION_REGbits.T0CS = 0;
     OPTION_REGbits.PSA  = 0;
     OPTION_REGbits.PS   = 0b111;
-    TMR0   = 246;
+    TMR0   = 250;
     TMR0IF = 0;
     TMR0IE = 1;
     GIE    = 1;

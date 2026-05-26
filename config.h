@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 // Frecuencia del oscilador
-#define _XTAL_FREQ      4000000UL
+#define _XTAL_FREQ      6000000UL
 #define LCD_ADDR        0x4E
 
 // Conversión ADC
