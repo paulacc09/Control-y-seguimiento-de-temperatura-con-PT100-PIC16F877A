@@ -1,5 +1,4 @@
 
-
 #include "I2C_LCD.h"
 #include "botones.h"
 #include "config.h"
@@ -12,6 +11,7 @@ static uint8_t  rb0_hold_fired = 0;
 static uint8_t  rb0_debounce   = 0;
 static uint8_t  rb1_debounce   = 0;
 static uint8_t  rb2_debounce   = 0;
+static uint8_t  rb12_fired     = 0;
 
 void leer_botones(void) {
     uint8_t rb0 = (BTN_MODE == 0);
@@ -35,21 +35,21 @@ void leer_botones(void) {
 
     // MODE button (RB0)
     if (rb0 && rb0_debounce == 5) {
-            rb0_hold_count++;
-        if (!rb0_hold_fired && rb0_hold_count >= 2000) {
-                rb0_hold_fired = 1;
-                if (modo_actual != MODO_CONFIG) {
-                    modo_anterior = modo_actual;
+        rb0_hold_count++;
+        if (!rb0_hold_fired && rb0_hold_count >= 500) {
+            rb0_hold_fired = 1;
+            if (modo_actual != MODO_CONFIG) {
+                modo_anterior = modo_actual;
                 modo_actual = MODO_CONFIG;
                 campo_edit = EDIT_VON;
-                    LCD_Clear();
-                } else {
-                    guardar_umbrales_EEPROM();
-                    modo_actual = modo_anterior;
-                    LCD_Clear();
-                }
+                LCD_Clear();
+            } else {
+                guardar_umbrales_EEPROM();
+                modo_actual = modo_anterior;
+                LCD_Clear();
             }
         }
+    }
     if (!rb0 && rb0_was && rb0_debounce == 5) {
         // Short press (if not a long press)
         if (!rb0_hold_fired) {
@@ -63,17 +63,22 @@ void leer_botones(void) {
             } else if (modo_actual == MODO_MANUAL) {
                 modo_actual = MODO_AUTO;
                 vista_actual = VISTA_NORMAL;
-        LCD_Clear();
-    }
+                LCD_Clear();
+            }
         }
         rb0_hold_count = 0;
         rb0_hold_fired = 0;
     }
 
-    // RB1 + RB2 simultaneous in MODO_AUTO
+    // RB1 + RB2 simultaneous in MODO_AUTO (rising edge, once per combo)
     if (modo_actual == MODO_AUTO && rb1 && rb2 && rb1_debounce == 5 && rb2_debounce == 5) {
-        modo_actual = MODO_MANUAL;
-        LCD_Clear();
+        if (!rb12_fired) {
+            rb12_fired = 1;
+            modo_actual = MODO_MANUAL;
+            LCD_Clear();
+        }
+    } else if (!rb1 || !rb2) {
+        rb12_fired = 0;
     }
 
     // UP button (RB1)
@@ -86,11 +91,11 @@ void leer_botones(void) {
                 int8_t next = t_von + 1;
                 if (next <= T_CONFIG_MAX && (next - t_voff) >= DIFF_MIN) {
                     t_von = next;
-            advertencia_activa = 0;
+                    advertencia_activa = 0;
                 } else {
                     advertencia_activa = 1;
                     advertencia_count = 0;
-        }
+                }
             } else if (campo_edit == EDIT_VOFF) {
                 int8_t next = t_voff + 1;
                 if (next <= T_CONFIG_MAX && (t_von - next) >= DIFF_MIN) {
@@ -99,8 +104,8 @@ void leer_botones(void) {
                 } else {
                     advertencia_activa = 1;
                     advertencia_count = 0;
-    }
-}
+                }
+            }
         }
     }
 
