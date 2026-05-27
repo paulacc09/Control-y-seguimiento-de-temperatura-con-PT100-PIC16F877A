@@ -1,7 +1,7 @@
 /* File: I2C_LCD.h */
  
 #ifndef _XTAL_FREQ
-#define _XTAL_FREQ            4000000UL
+#define _XTAL_FREQ            6000000UL
 #endif
  
 #define I2C_BaudRate          100000

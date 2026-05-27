@@ -2,6 +2,11 @@
 #include "config.h"
 
 void control_histeresis(void) {
+    if (voltaje_actual < 2.0f) {
+        fan_on  = 0;
+        FAN_PIN = 0;
+        return;
+    }
     if (modo_actual == MODO_AUTO) {
         if (temperatura_actual > (float)t_von) {
             fan_on  = 1;

@@ -1,8 +1,8 @@
+#include "config.h"
 #include <xc.h>
 #include "I2C_LCD.h"
  
 unsigned char RS, i2c_add, BackLight_State = LCD_BACKLIGHT;
- #define _XTAL_FREQ 4000000
 #define I2C_BaudRate 100000
 #define SCL_D TRISC3
 #define SDA_D TRISC4
@@ -94,13 +94,13 @@ void LCD_Init(unsigned char I2C_Add)
   LCD_CMD(LCD_RETURN_HOME);
   __delay_ms(5);
   LCD_CMD(0x20 | (LCD_TYPE << 2));
-  __delay_ms(50);
+  __delay_ms(5);
   LCD_CMD(LCD_TURN_ON);
-  __delay_ms(50);
+  __delay_ms(5);
   LCD_CMD(LCD_CLEAR);
-  __delay_ms(50);
+  __delay_ms(5);
   LCD_CMD(LCD_ENTRY_MODE_SET | LCD_RETURN_HOME);
-  __delay_ms(50);
+  __delay_ms(5);
 }
  
 void IO_Expander_Write(unsigned char Data)
@@ -186,5 +186,5 @@ void LCD_SR()
 void LCD_Clear()
 {
   LCD_CMD(0x01);
-  __delay_us(40);
+  __delay_ms(2);
 }
