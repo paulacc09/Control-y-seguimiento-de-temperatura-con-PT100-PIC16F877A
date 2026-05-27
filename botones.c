@@ -12,17 +12,17 @@ static uint8_t  rb0_debounce   = 0;
 static uint8_t  rb1_debounce   = 0;
 static uint8_t  rb2_debounce   = 0;
 static uint8_t  rb12_fired     = 0;
+static uint8_t  rb0_stable     = 0;
+static uint8_t  rb1_stable     = 0;
+static uint8_t  rb2_stable     = 0;
 
 void leer_botones(void) {
     uint8_t rb0 = (BTN_MODE == 0);
     uint8_t rb1 = (BTN_UP == 0);
     uint8_t rb2 = (BTN_DOWN == 0);
+    uint8_t combo_fired_this_tick = 0;
 
-    uint8_t rb0_was = rb0_prev;
-    uint8_t rb1_was = rb1_prev;
-    uint8_t rb2_was = rb2_prev;
-
-    // Debounce control
+    // a) Debounce: estable tras 5 ms consecutivos en el mismo estado
     if (rb0 != rb0_prev) rb0_debounce = 0;
     if (rb1 != rb1_prev) rb1_debounce = 0;
     if (rb2 != rb2_prev) rb2_debounce = 0;
@@ -33,8 +33,18 @@ void leer_botones(void) {
     rb1_prev = rb1;
     rb2_prev = rb2;
 
-    // MODE button (RB0)
-    if (rb0 && rb0_debounce == 5) {
+    // b) Estado estable del ciclo anterior (antes de actualizar stable)
+    uint8_t rb0_was_stable = rb0_stable;
+    uint8_t rb1_was_stable = rb1_stable;
+    uint8_t rb2_was_stable = rb2_stable;
+
+    // c) Actualizar estado estable confirmado
+    if (rb0_debounce == 5) rb0_stable = rb0;
+    if (rb1_debounce == 5) rb1_stable = rb1;
+    if (rb2_debounce == 5) rb2_stable = rb2;
+
+    // MODE (RB0): pulsación larga mientras estable presionado
+    if (rb0_stable) {
         rb0_hold_count++;
         if (!rb0_hold_fired && rb0_hold_count >= 500) {
             rb0_hold_fired = 1;
@@ -50,8 +60,9 @@ void leer_botones(void) {
             }
         }
     }
-    if (!rb0 && rb0_was && rb0_debounce == 5) {
-        // Short press (if not a long press)
+
+    // MODE (RB0): flanco descendente estable = pulsación corta si no hubo hold
+    if (!rb0_stable && rb0_was_stable) {
         if (!rb0_hold_fired) {
             if (modo_actual == MODO_CONFIG) {
                 campo_edit = (campo_edit == EDIT_VON) ? EDIT_VOFF : EDIT_VON;
@@ -70,19 +81,20 @@ void leer_botones(void) {
         rb0_hold_fired = 0;
     }
 
-    // RB1 + RB2 simultaneous in MODO_AUTO (rising edge, once per combo)
-    if (modo_actual == MODO_AUTO && rb1 && rb2 && rb1_debounce == 5 && rb2_debounce == 5) {
+    // RB1 + RB2 en MODO_AUTO: una vez por combo
+    if (modo_actual == MODO_AUTO && rb1_stable && rb2_stable) {
         if (!rb12_fired) {
             rb12_fired = 1;
             modo_actual = MODO_MANUAL;
+            combo_fired_this_tick = 1;
             LCD_Clear();
         }
-    } else if (!rb1 || !rb2) {
+    } else if (!rb1_stable || !rb2_stable) {
         rb12_fired = 0;
     }
 
-    // UP button (RB1)
-    if (rb1 && !rb1_was && rb1_debounce == 5) {
+    // d) UP (RB1): flanco ascendente estable
+    if (!combo_fired_this_tick && rb1_stable && !rb1_was_stable) {
         if (modo_actual == MODO_MANUAL) {
             fan_on = 1;
             FAN_PIN = 1;
@@ -109,8 +121,8 @@ void leer_botones(void) {
         }
     }
 
-    // DOWN button (RB2)
-    if (rb2 && !rb2_was && rb2_debounce == 5) {
+    // d) DOWN (RB2): flanco ascendente estable
+    if (!combo_fired_this_tick && rb2_stable && !rb2_was_stable) {
         if (modo_actual == MODO_MANUAL) {
             fan_on = 0;
             FAN_PIN = 0;
