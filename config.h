@@ -29,6 +29,8 @@
 // Pines ventilador y alarma
 #define FAN_TRIS        TRISDbits.TRISD0
 #define FAN_PIN         PORTDbits.RD0
+#define FAN_ON_VAL      0
+#define FAN_OFF_VAL     1
 #define ALARM_TRIS      TRISDbits.TRISD1
 #define ALARM_PIN       PORTDbits.RD1
 
@@ -81,5 +83,7 @@ extern float temperatura_actual;
 // Advertencia CONFIG
 extern uint8_t advertencia_activa;
 extern uint16_t advertencia_count;
+
+extern uint8_t lcd_necesita_update;
 
 #endif

@@ -139,6 +139,7 @@ void actualizar_LCD(void) {
         } else {
             LCD_Clear();
         }
+        lcd_necesita_update = 0;
         return;
     }
 
@@ -148,11 +149,13 @@ void actualizar_LCD(void) {
             LCD_Write_String("  VALOR INVALIDO");
             LCD_Set_Cursor(2,1);
             LCD_Write_String("Von-Voff >= 5C! ");
+            lcd_necesita_update = 0;
             return;
         }
         fmt_config_line(buf1, (uint8_t)(campo_edit == EDIT_VON));
         LCD_Set_Cursor(1,1); LCD_Write_String(buf1);
         LCD_Set_Cursor(2,1); LCD_Write_String("UP/DN ajusta    ");
+        lcd_necesita_update = 0;
         return;
     }
 
@@ -160,10 +163,11 @@ void actualizar_LCD(void) {
         fmt_manual_temp(buf1);
         LCD_Set_Cursor(1,1); LCD_Write_String(buf1);
         if (fan_on) {
-            LCD_Set_Cursor(2,1); LCD_Write_String("FAN:ON  U=ON D=OF");
+            LCD_Set_Cursor(2,1); LCD_Write_String("FAN: ON         ");
         } else {
-            LCD_Set_Cursor(2,1); LCD_Write_String("FAN:OFF U=ON D=OF");
+            LCD_Set_Cursor(2,1); LCD_Write_String("FAN: OFF        ");
         }
+        lcd_necesita_update = 0;
         return;
     }
 
@@ -185,6 +189,7 @@ void actualizar_LCD(void) {
             fmt_temp_stat_line(buf2, temp_min);
             LCD_Set_Cursor(2,1); LCD_Write_String(buf2);
         }
+        lcd_necesita_update = 0;
         return;
     }
 }

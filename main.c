@@ -33,6 +33,7 @@ float       voltaje_actual     = 0.0f;
 float       temperatura_actual = 0.0f;
 uint8_t     advertencia_activa = 0;
 uint16_t    advertencia_count  = 0;
+uint8_t     lcd_necesita_update = 1;
 
 // ── ISR ───────────────────────────────────────────────────────────────────────
 void __interrupt() isr(void) {
@@ -64,6 +65,7 @@ void main(void) {
     TRISA = 0xFF; TRISB = 0xFF; TRISC = 0xFF;
     TRISD = 0x00; PORTD = 0x00;
     FAN_TRIS = 0; ALARM_TRIS = 0;
+    FAN_PIN = FAN_OFF_VAL;
     OPTION_REGbits.nRBPU = 0;
 
     ADCON1 = 0b10000000;
@@ -100,6 +102,9 @@ void main(void) {
             if (temperatura_actual < temp_min) temp_min = temperatura_actual;
             control_histeresis();
             control_alarma();
+            lcd_necesita_update = 1;
+        }
+        if (lcd_necesita_update) {
             actualizar_LCD();
         }
     }
