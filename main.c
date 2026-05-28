@@ -92,7 +92,6 @@ void main(void) {
 
     while (1) {
         leer_botones();
-        __delay_ms(1);
 
         if (flag_timer) {
             flag_timer = 0;
@@ -104,8 +103,12 @@ void main(void) {
             control_alarma();
             lcd_necesita_update = 1;
         }
+
         if (lcd_necesita_update) {
             actualizar_LCD();
         }
+
+        leer_botones();
+        __delay_ms(1);
     }
 }

@@ -192,6 +192,8 @@ void actualizar_LCD(void) {
         lcd_necesita_update = 0;
         return;
     }
+
+    lcd_necesita_update = 0;
 }
 
 void animacion_inicio(void) {

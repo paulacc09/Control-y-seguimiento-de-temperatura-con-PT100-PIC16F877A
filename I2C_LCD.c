@@ -6,6 +6,49 @@ unsigned char RS, i2c_add, BackLight_State = LCD_BACKLIGHT;
 #define I2C_BaudRate 100000
 #define SCL_D TRISC3
 #define SDA_D TRISC4
+#define I2C_WAIT_TIMEOUT  5000u
+
+static void I2C_Bus_Recovery(void) {
+    uint8_t i;
+
+    SSPCON = 0;
+    SSPCON2 = 0;
+    SSPSTAT = 0;
+
+    TRISCbits.TRISC3 = 0;
+    TRISCbits.TRISC4 = 0;
+    RC3 = 1;
+    RC4 = 1;
+
+    for (i = 0; i < 9u; i++) {
+        RC3 = 0;
+        __delay_us(5);
+        RC3 = 1;
+        __delay_us(5);
+    }
+
+    RC4 = 0;
+    __delay_us(5);
+    RC3 = 1;
+    __delay_us(5);
+    RC4 = 1;
+    __delay_us(5);
+
+    I2C_Master_Init();
+}
+
+static uint8_t I2C_Wait_SSPIF(void) {
+    uint16_t timeout = I2C_WAIT_TIMEOUT;
+
+    while (!SSPIF) {
+        if (--timeout == 0u) {
+            I2C_Bus_Recovery();
+            return 0;
+        }
+    }
+    SSPIF = 0;
+    return 1;
+}
 
 //---------------[ I2C Routines ]-------------------
 //--------------------------------------------------
@@ -21,7 +64,14 @@ void I2C_Master_Init()
  
 void I2C_Master_Wait()
 {
-  while ((SSPSTAT & 0x04) || (SSPCON2 & 0x1F));
+  uint16_t timeout = I2C_WAIT_TIMEOUT;
+
+  while ((SSPSTAT & 0x04) || (SSPCON2 & 0x1F)) {
+    if (--timeout == 0u) {
+      I2C_Bus_Recovery();
+      return;
+    }
+  }
 }
  
 void I2C_Master_Start()
@@ -60,8 +110,9 @@ unsigned char I2C_Master_Write(unsigned char data)
 {
   I2C_Master_Wait();
   SSPBUF = data;
-  while(!SSPIF); // Wait Until Completion
-  SSPIF = 0;
+  if (!I2C_Wait_SSPIF()) {
+    return 1;
+  }
   return ACKSTAT;
 }
  
@@ -69,11 +120,12 @@ unsigned char I2C_Read_Byte(void)
 {
   //---[ Receive & Return A Byte ]---
   I2C_Master_Wait();
-  RCEN = 1; // Enable & Start Reception
-  while(!SSPIF); // Wait Until Completion
-  SSPIF = 0; // Clear The Interrupt Flag Bit
+  RCEN = 1;
+  if (!I2C_Wait_SSPIF()) {
+    return 0;
+  }
   I2C_Master_Wait();
-  return SSPBUF; // Return The Received Byte
+  return SSPBUF;
 }
 //======================================================
  

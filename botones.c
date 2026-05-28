@@ -104,6 +104,7 @@ void leer_botones(void) {
         if (modo_actual == MODO_MANUAL) {
             fan_on = 1;
             FAN_PIN = FAN_ON_VAL;
+            __delay_ms(5);
             lcd_necesita_update = 1;
         } else if (modo_actual == MODO_CONFIG) {
             if (campo_edit == EDIT_VON) {
@@ -135,6 +136,7 @@ void leer_botones(void) {
         if (modo_actual == MODO_MANUAL) {
             fan_on = 0;
             FAN_PIN = FAN_OFF_VAL;
+            __delay_ms(5);
             lcd_necesita_update = 1;
         } else if (modo_actual == MODO_CONFIG) {
             if (campo_edit == EDIT_VON) {
