@@ -62,13 +62,15 @@ void configurar_timer0(void) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 void main(void) {
+    ADCON1 = 0b10000000;
+
     TRISA = 0xFF; TRISB = 0xFF; TRISC = 0xFF;
     TRISD = 0x00; PORTD = 0x00;
     FAN_TRIS = 0; ALARM_TRIS = 0;
     FAN_PIN = FAN_OFF_VAL;
+
     OPTION_REGbits.nRBPU = 0;
 
-    ADCON1 = 0b10000000;
     ADCON0 = 0b01000001;
     __delay_ms(10);
 

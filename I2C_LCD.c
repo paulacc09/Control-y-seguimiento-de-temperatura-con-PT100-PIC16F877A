@@ -11,29 +11,29 @@ unsigned char RS, i2c_add, BackLight_State = LCD_BACKLIGHT;
 static void I2C_Bus_Recovery(void) {
     uint8_t i;
 
-    SSPCON = 0;
-    SSPCON2 = 0;
-    SSPSTAT = 0;
+    SSPCON = 0x00;
+    __delay_us(10);
 
-    TRISCbits.TRISC3 = 0;
-    TRISCbits.TRISC4 = 0;
+    TRISC3 = 0;
+    TRISC4 = 0;
     RC3 = 1;
     RC4 = 1;
 
     for (i = 0; i < 9u; i++) {
         RC3 = 0;
-        __delay_us(5);
+        __delay_us(10);
         RC3 = 1;
-        __delay_us(5);
+        __delay_us(10);
     }
 
     RC4 = 0;
-    __delay_us(5);
+    __delay_us(10);
     RC3 = 1;
-    __delay_us(5);
+    __delay_us(10);
     RC4 = 1;
-    __delay_us(5);
+    __delay_us(10);
 
+    __delay_us(50);
     I2C_Master_Init();
 }
 
@@ -60,6 +60,7 @@ void I2C_Master_Init()
   SSPADD = ((_XTAL_FREQ/4)/I2C_BaudRate) - 1;
   SCL_D = 1;
   SDA_D = 1;
+  __delay_ms(10);
 }
  
 void I2C_Master_Wait()

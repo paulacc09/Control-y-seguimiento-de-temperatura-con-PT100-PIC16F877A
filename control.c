@@ -8,14 +8,12 @@ void control_histeresis(void) {
         FAN_PIN = FAN_OFF_VAL;
         return;
     }
-    if (modo_actual == MODO_AUTO) {
-        if (temperatura_actual > (float)t_von) {
-            fan_on  = 1;
-            FAN_PIN = FAN_ON_VAL;
-        } else if (temperatura_actual < (float)t_voff) {
-            fan_on  = 0;
-            FAN_PIN = FAN_OFF_VAL;
-        }
+    if (temperatura_actual > (float)t_von) {
+        fan_on  = 1;
+        FAN_PIN = FAN_ON_VAL;
+    } else if (temperatura_actual < (float)t_voff) {
+        fan_on  = 0;
+        FAN_PIN = FAN_OFF_VAL;
     }
 }
 

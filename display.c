@@ -132,12 +132,15 @@ void actualizar_LCD(void) {
 
     if (alarma_activa) {
         if (alarma_parpadeo) {
+            LCD_CMD(0x01);
+            __delay_ms(2);
             LCD_Set_Cursor(1,1);
             LCD_Write_String("  ALERTA TEMP!  ");
             LCD_Set_Cursor(2,1);
             LCD_Write_String("   !! CRITICO!! ");
         } else {
-            LCD_Clear();
+            LCD_CMD(0x01);
+            __delay_ms(2);
         }
         lcd_necesita_update = 0;
         return;

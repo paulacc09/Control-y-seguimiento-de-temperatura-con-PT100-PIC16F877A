@@ -46,7 +46,7 @@ void leer_botones(void) {
     // MODE (RB0): pulsación larga mientras estable presionado
     if (rb0_stable) {
         rb0_hold_count++;
-        if (!rb0_hold_fired && rb0_hold_count >= 300) {
+        if (!rb0_hold_fired && rb0_hold_count >= 80) {
             rb0_hold_fired = 1;
             if (modo_actual != MODO_CONFIG) {
                 modo_anterior = modo_actual;
@@ -104,7 +104,6 @@ void leer_botones(void) {
         if (modo_actual == MODO_MANUAL) {
             fan_on = 1;
             FAN_PIN = FAN_ON_VAL;
-            __delay_ms(5);
             lcd_necesita_update = 1;
         } else if (modo_actual == MODO_CONFIG) {
             if (campo_edit == EDIT_VON) {
@@ -136,7 +135,6 @@ void leer_botones(void) {
         if (modo_actual == MODO_MANUAL) {
             fan_on = 0;
             FAN_PIN = FAN_OFF_VAL;
-            __delay_ms(5);
             lcd_necesita_update = 1;
         } else if (modo_actual == MODO_CONFIG) {
             if (campo_edit == EDIT_VON) {
