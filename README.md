@@ -254,10 +254,10 @@ stateDiagram-v2
 
 ### MANUAL
 
-- **UP (RB1):** `fan_on=1`, RD0=0, delay 5 ms, refresco LCD.
-- **DOWN (RB2):** `fan_on=0`, RD0=1, delay 5 ms, refresco LCD.
+- **UP (RB1):** `fan_on=1`, RD0=0, `lcd_necesita_update=1`.
+- **DOWN (RB2):** `fan_on=0`, RD0=1, `lcd_necesita_update=1`.
 - **MODE corta:** vuelve a AUTO.
-- La histéresis **no modifica** el ventilador en este modo.
+- La histéresis **no modifica** el ventilador en este modo (sin delays de software al conmutar el relé).
 
 ### CONFIG
 
@@ -287,10 +287,10 @@ Botones activos en bajo. Debounce en **3 llamadas estables**:
 
 | Tipo | Detección | Umbral |
 |------|-----------|--------|
-| **Larga** | RB0 estable, `rb0_hold_count++` | ≥ **300** llamadas |
+| **Larga** | RB0 estable, `rb0_hold_count++` | ≥ **80** llamadas |
 | **Corta** | Flanco descendente sin hold | Al soltar RB0 |
 
-> 300 ticks no son 300 ms reales si el LCD bloquea el bucle. Ajustar umbral (p. ej. 80) si la larga se confunde con corta.
+> 80 ticks no son 80 ms reales: el bucle puede bloquearse ~20–40 ms por I2C en cada actualización de LCD, por lo que la pulsación larga se percibe como ~0,5–1 s de presión sostenida.
 
 ### Combo RB1 + RB2 (solo AUTO)
 
@@ -329,7 +329,7 @@ actualizar_LCD() / LCD_Clear()
 ```
 
 - Cada carácter = varias transacciones I2C (~20–40 ms pantalla completa).
-- **Recuperación de bus:** timeout en `I2C_Master_Wait()` + `I2C_Bus_Recovery()` (9 pulsos SCL + STOP + re-init) ante ruido del relé.
+- **Recuperación de bus:** timeout en `I2C_Master_Wait()` + `I2C_Bus_Recovery()` — deshabilita MSSP (`SSPCON=0`), 9 pulsos SCL bit-bang (10 µs), STOP manual, espera 50 µs, `I2C_Master_Init()` con 10 ms de resincronización del PCF8574.
 - **Sin `printf`:** formateo manual para ahorrar RAM.
 
 | Formato | Función |
@@ -344,13 +344,15 @@ actualizar_LCD() / LCD_Clear()
 | Estado | Línea 1 | Línea 2 |
 |--------|---------|---------|
 | Alarma (parpadeo ON) | `  ALERTA TEMP!  ` | `   !! CRITICO!! ` |
-| Alarma (parpadeo OFF) | *(LCD_Clear — blanco)* | |
+| Alarma (parpadeo OFF) | *(pantalla en blanco — `LCD_CMD(0x01)`)* | |
 | CONFIG normal | `*Von:50  Voff:35` | `UP/DN ajusta    ` |
 | CONFIG inválido | `  VALOR INVALIDO` | `Von-Voff >= 5C! ` |
 | MANUAL | `T:xx.xC  MANUAL  ` | `FAN: ON         ` / `FAN: OFF        ` |
 | AUTO normal | `V:x.xxxV T:xx.xC` | `FAN:ON  AUTO    ` / `FAN:OFF AUTO    ` |
 | AUTO MAX | `  Temp. MAXIMA  ` | `    xx.x C      ` |
 | AUTO MIN | `  Temp. MINIMA  ` | `    xx.x C      ` |
+
+En alarma, cada fase usa `LCD_CMD(0x01)` + `__delay_ms(2)` (no `LCD_Clear()`) para reducir tráfico I2C en el parpadeo.
 
 ### Arranque — `animacion_inicio()`
 
@@ -362,13 +364,15 @@ actualizar_LCD() / LCD_Clear()
 
 ## Flujo de arranque
 
-1. Puertos (A/B/C entradas; D salidas; RD0=1 relé OFF).
-2. ADC canal 0.
-3. I2C y LCD.
-4. Animación de inicio.
-5. Carga umbrales EEPROM.
-6. Timer0 e interrupciones.
-7. Primera lectura ADC (inicializa T, V, min, max).
+1. **`ADCON1 = 0b10000000`** — pines analógicos/digitales antes que el resto.
+2. TRIS/PORTD: A/B/C entradas; D salidas; `FAN_PIN = FAN_OFF_VAL` (relé OFF).
+3. `OPTION_REGbits.nRBPU = 0` — pull-ups PORTB.
+4. **`ADCON0 = 0b01000001`** + `__delay_ms(10)`.
+5. I2C y LCD (`I2C_Master_Init`, `LCD_Init`).
+6. Animación de inicio.
+7. Carga umbrales EEPROM.
+8. Timer0 e interrupciones.
+9. Primera lectura ADC (inicializa T, V, min, max).
 
 ---
 
@@ -380,9 +384,9 @@ Al conmutar el relé en MANUAL: LCD con luz pero sin texto, botones sin respuest
 
 **Causa:** ruido eléctrico bloquea I2C en `while` infinito.
 
-**Mitigación firmware:** timeout + `I2C_Bus_Recovery()`, doble `leer_botones()`, delay 5 ms tras cambiar RD0.
+**Mitigación firmware:** timeout + `I2C_Bus_Recovery()`, doble `leer_botones()`, sin delays de software al conmutar el relé en MANUAL.
 
-**Hardware recomendado:** diodo flyback, desacoplo Vdd, alimentación separada del relé, I2C lejos del cable del relé.
+**Hardware recomendado:** diodo flyback en bobina del relé, desacoplo en Vdd del PIC, alimentación separada del relé, cables I2C alejados del relé.
 
 ### `fan_on` vs RD0
 
@@ -445,9 +449,13 @@ Definido en `config.h` como `6000000UL`. `I2C_LCD.h` usa `#ifndef _XTAL_FREQ` pa
 | Lógica relé invertida | `FAN_ON_VAL=0`, `FAN_OFF_VAL=1` |
 | Histéresis pisa MANUAL | `if (modo_actual != MODO_AUTO) return` en `control_histeresis()` |
 | LCD bloquea botones | `lcd_necesita_update`, doble `leer_botones()` |
-| I2C colgado por ruido relé | Timeout + `I2C_Bus_Recovery()` |
+| I2C colgado por ruido relé | Timeout + `I2C_Bus_Recovery()` mejorada + `I2C_Master_Init()` con 10 ms |
 | Combo RB1+RB2 repetido | Flag `rb12_fired` |
 | Cristal 6 MHz | `_XTAL_FREQ=6000000UL`, TMR0=250 |
+| Pulsación larga RB0 no detectada | Umbral hold reducido a **80** ticks |
+| Parpadeo alarma lento en I2C | `LCD_CMD(0x01)` directo en lugar de `LCD_Clear()` |
+| ADC mal configurado al arranque | `ADCON1` antes de TRIS y `ADCON0` |
+| `control_histeresis()` redundante | Eliminado `if (MODO_AUTO)` interno duplicado |
 
 ---
 
@@ -490,7 +498,7 @@ Definido en `config.h` como `6000000UL`. `I2C_LCD.h` usa `#ifndef _XTAL_FREQ` pa
 | TMR0 reload | 250 |
 | Timer0 tick (`flag_timer`) | ~50 ms |
 | Debounce botones | 3 llamadas estables |
-| Hold RB0 (CONFIG) | 300 llamadas estables |
+| Hold RB0 (CONFIG) | 80 llamadas estables |
 | Von / Voff default | 50 °C / 35 °C |
 | Histéresis mínima CONFIG | 5 °C |
 | Rango CONFIG | 26–59 °C |
